@@ -16,7 +16,6 @@ export const event = {
   timeLabel,
   afterParty,
 
-  // used from step 3; verify center on the map
   map: { center: [32.832, 34.98] as [number, number], zoom: 16 },
 
   home: {
@@ -27,9 +26,44 @@ export const event = {
       map: "למפת הבתים המשתתפים",
       getMap: "מגיעים מקריית אליעזר? קבלו את המפה",
     },
-    guidelinesTitle: "הנחיות",
   },
 
+  register: {
+    title: "רישום בית משתתף",
+    intro:
+      "ממלאים את הפרטים ומסמנים את הבניין על המפה. אחרי אישור המארגנים הבית יופיע במפת האירוע.",
+    optional: "(לא חובה)",
+    labels: {
+      names: "שמות המארחים",
+      phone: "טלפון",
+      street: "רחוב",
+      building_number: "מספר בית",
+      entrance: "כניסה",
+      floor: "קומה",
+      apartment: "דירה",
+      access_type: "איך עולים לדירה?",
+      door_color: "צבע הדלת",
+      door_sign: "מה כתוב על השלט בדלת?",
+      access_notes: "עוד משהו שיעזור למצוא אתכם",
+      pin: "איפה הבניין?",
+    },
+    accessTypes: { stairs: "מדרגות", elevator: "מעלית", both: "גם וגם" },
+    hints: {
+      private: "לא יופיע במפה. רק המארגנים יראו.",
+      access_notes: "יופיע במפה לכל המשתתפים. לא לכתוב קוד כניסה לבניין.",
+      pin: "הקישו על המפה במקום הבניין שלכם. הקשה נוספת מזיזה את הסימון.",
+    },
+    guidelinesAck: "קראתי את ההנחיות, ואקשט את הדלת או הכניסה כך שיהיה ברור שאנחנו משתתפים.",
+    mapConsent: "אני מסכים/ה שהכתובת ותיאור הדלת יופיעו במפת האירוע.",
+    submit: "שליחה",
+    sending: "שולח…",
+    pinMissing: "צריך לסמן את הבניין על המפה.",
+    error: "משהו השתבש בשליחה. נסו שוב.",
+    success: "תודה! קיבלנו את ההרשמה. אחרי אישור המארגנים הבית יופיע במפה.",
+    backHome: "חזרה לדף הראשי",
+  },
+
+  guidelinesTitle: "הנחיות",
   guidelines: [
     { text: `ממתק או ברדק בין ${time.start} ל־${time.end}. אחר כך נפגשים לאירוע קהילתי ${afterParty}.` },
     { text: "מקשטים את הדלת או את הכניסה, כדי שיהיה ברור לילדים שאתם משתתפים." },

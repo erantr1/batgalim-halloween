@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Guidelines from "@/components/Guidelines";
 import { event } from "@/config/event";
 
 const button =
@@ -29,24 +30,7 @@ export default function Home() {
         </Link>
       </nav>
 
-      <section className="flex flex-col gap-3">
-        <h2 className="text-2xl font-bold">{event.home.guidelinesTitle}</h2>
-        <ul className="flex list-disc flex-col gap-2 ps-5">
-          {event.guidelines.map((g) => (
-            <li key={g.text}>
-              {g.text}
-              {g.link && (
-                <>
-                  {" "}
-                  <a href={g.link.href} target="_blank" rel="noopener noreferrer" className="text-orange-400 underline">
-                    {g.link.label}
-                  </a>
-                </>
-              )}
-            </li>
-          ))}
-        </ul>
-      </section>
+      <Guidelines />
     </main>
   );
 }

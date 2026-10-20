@@ -20,7 +20,7 @@ Almost everyone is on a phone. Design mobile-first.
 - Next.js (App Router), TypeScript, Tailwind. Read AGENTS.md: this Next.js version may differ from what you know.
 - Cache Components is enabled. Map data and the published flag must be fresh on every request; don't let them be cached at build time.
 - Supabase (Postgres + row-level security) via `@supabase/supabase-js` with the anon/publishable key. There is no user auth, so no `@supabase/ssr`.
-- Leaflet + react-leaflet with OpenStreetMap tiles. No API keys.
+- Leaflet (plain, no react-leaflet) with OpenStreetMap tiles. No API keys. react-leaflet removes its map when Next hides a visited page (Cache Components keeps pages mounted in `<Activity>`) and never rebuilds it; plain Leaflet built in a `useEffect` and removed in its cleanup rebuilds on return.
 - Deployed on Vercel (Hobby) from GitHub. Every push gets a preview URL.
 
 Env vars: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`. Keep `.env.example` in sync; real values live in `.env.local` (gitignored).
