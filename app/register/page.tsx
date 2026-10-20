@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import Guidelines from "@/components/Guidelines";
 import { event } from "@/config/event";
 import RegisterForm from "./RegisterForm";
@@ -9,11 +10,14 @@ export default function RegisterPage() {
   return (
     <main className="mx-auto flex w-full max-w-xl flex-col gap-8 px-4 py-8">
       <header className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold text-orange-500">{event.register.title}</h1>
+        <h1 className="text-3xl">{event.register.title}</h1>
         <p className="text-lg">{event.register.intro}</p>
       </header>
-      <Guidelines />
-      <RegisterForm />
+      <Guidelines items={[...event.guidelines, ...event.register.guidelines]} />
+      {/* The form reads ?kind= from the URL, which needs a Suspense boundary; it renders in the browser. */}
+      <Suspense>
+        <RegisterForm />
+      </Suspense>
     </main>
   );
 }

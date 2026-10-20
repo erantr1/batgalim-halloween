@@ -9,9 +9,53 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-rubik);
+  --font-spooky: var(--font-rubik-wet-paint);
+}
+
+@theme {
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-swing: swing 3s ease-in-out infinite alternate;
+  --animate-flicker: flicker 3s ease-in-out infinite;
+
+  @keyframes float {
+    50% {
+      translate: 0 -10px;
+      rotate: 6deg;
+    }
+  }
+  @keyframes swing {
+    from {
+      rotate: -8deg;
+    }
+    to {
+      rotate: 8deg;
+    }
+  }
+  /* candlelight */
+  @keyframes flicker {
+    0%,
+    100% {
+      box-shadow: 0 0 10px rgb(249 115 22 / 0.5);
+    }
+    45% {
+      box-shadow: 0 0 20px rgb(249 115 22 / 0.9);
+    }
+    50% {
+      box-shadow: 0 0 8px rgb(249 115 22 / 0.4);
+    }
+  }
 }
 
 body {
-  background: var(--background);
+  /* a purple night-sky glow over the dark background */
+  background: radial-gradient(ellipse 120% 50% at top, #3b0764 0%, transparent 70%), var(--background);
   color: var(--foreground);
+}
+
+@layer base {
+  h1 {
+    font-family: var(--font-spooky);
+    color: var(--color-orange-500);
+    filter: drop-shadow(0 0 10px rgb(249 115 22 / 0.5));
+  }
 }

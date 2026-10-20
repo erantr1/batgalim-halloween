@@ -2,7 +2,8 @@
 
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useState, type FormEvent, type InputHTMLAttributes } from "react";
+import { useSearchParams } from "next/navigation";
+import { useLayoutEffect, useRef, useState, type FormEvent, type InputHTMLAttributes } from "react";
 import { event } from "@/config/event";
 import { supabase } from "@/lib/supabase";
 import type { Pin } from "./PinPicker";
@@ -15,6 +16,8 @@ const PinPicker = dynamic(() => import("./PinPicker"), {
 
 const t = event.register;
 const input = "w-full rounded-lg border border-stone-600 bg-stone-800 px-3 py-2 text-base";
+
+type Kind = keyof typeof t.kinds;
 
 type FieldProps = {
   name: keyof typeof t.labels;
@@ -36,10 +39,26 @@ function Field({ name, required, hint, ...props }: FieldProps) {
 }
 
 export default function RegisterForm() {
+  // The home page's activity button links here with ?kind=activity. Read from the URL on every
+  // render, not kept in state: Next keeps visited pages mounted, so state would outlive the visit.
+  const kind: Kind = useSearchParams().get("kind") === "activity" ? "activity" : "home";
   const [pin, setPin] = useState<Pin | null>(null);
   const [sending, setSending] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
+  const submitted = useRef(false);
+
+  // Next keeps visited pages mounted (<Activity>). After a successful registration, reset when the
+  // page is hidden, so coming back shows a fresh form instead of the thank-you message.
+  useLayoutEffect(
+    () => () => {
+      if (!submitted.current) return;
+      submitted.current = false;
+      setDone(false);
+      setPin(null);
+    },
+    [],
+  );
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -50,7 +69,10 @@ export default function RegisterForm() {
     setSending(true);
     setError("");
     // No .select(): anon may only INSERT, so asking for the row back would fail.
+    // Fields hidden for this kind aren't in the form, so they are sent as null.
     const { error } = await supabase.from("registrations").insert({
+      kind,
+      description: text("description"),
       names: text("names"),
       phone: text("phone"),
       street: text("street"),
@@ -73,6 +95,7 @@ export default function RegisterForm() {
       setError(t.error);
     } else {
       setDone(true);
+      submitted.current = true;
     }
   }
 
@@ -89,6 +112,8 @@ export default function RegisterForm() {
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-5">
+      <h2 className="text-2xl font-bold">{t.kinds[kind]}</h2>
+
       <Field name="names" required maxLength={200} autoComplete="name" hint={t.hints.private} />
       <Field name="phone" required minLength={9} maxLength={20} type="tel" dir="ltr" autoComplete="tel" hint={t.hints.private} />
 
@@ -98,24 +123,38 @@ export default function RegisterForm() {
         </div>
         <Field name="building_number" required maxLength={10} />
       </div>
-      <div className="grid grid-cols-3 gap-3">
-        <Field name="entrance" maxLength={10} />
-        <Field name="floor" maxLength={10} />
-        <Field name="apartment" maxLength={10} />
-      </div>
 
-      <fieldset className="flex flex-col gap-2">
-        <legend className="mb-1">{t.labels.access_type}</legend>
-        {Object.entries(t.accessTypes).map(([value, label]) => (
-          <label key={value} className="flex items-center gap-3">
-            <input type="radio" name="access_type" value={value} required className="size-5 accent-orange-500" />
-            {label}
-          </label>
-        ))}
-      </fieldset>
+      {kind === "activity" && (
+        <label className="flex flex-col gap-1">
+          <span>{t.labels.description}</span>
+          <textarea name="description" required maxLength={300} rows={3} className={input} />
+          <span className="text-sm text-stone-400">{t.hints.description}</span>
+        </label>
+      )}
 
-      <Field name="door_color" maxLength={50} />
-      <Field name="door_sign" maxLength={100} />
+      {kind === "home" && (
+        <>
+          <div className="grid grid-cols-3 gap-3">
+            <Field name="entrance" maxLength={10} />
+            <Field name="floor" maxLength={10} />
+            <Field name="apartment" maxLength={10} />
+          </div>
+
+          <fieldset className="flex flex-col gap-2">
+            <legend className="mb-1">{t.labels.access_type}</legend>
+            {Object.entries(t.accessTypes).map(([value, label]) => (
+              <label key={value} className="flex items-center gap-3">
+                <input type="radio" name="access_type" value={value} required className="size-5 accent-orange-500" />
+                {label}
+              </label>
+            ))}
+          </fieldset>
+
+          <Field name="door_color" maxLength={50} />
+          <Field name="door_sign" maxLength={100} />
+        </>
+      )}
+
       <label className="flex flex-col gap-1">
         <span>
           {t.labels.access_notes} <span className="text-stone-400">{t.optional}</span>
@@ -126,7 +165,7 @@ export default function RegisterForm() {
 
       <div className="flex flex-col gap-2">
         <span>{t.labels.pin}</span>
-        <PinPicker pin={pin} onChange={setPin} />
+        <PinPicker pin={pin} onChange={setPin} kind={kind} />
         <span className="text-sm text-stone-400">{t.hints.pin}</span>
       </div>
 

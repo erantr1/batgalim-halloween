@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type FormEvent } from "react";
+import { useLayoutEffect, useRef, useState, type FormEvent } from "react";
 import { event } from "@/config/event";
 import { supabase } from "@/lib/supabase";
 
@@ -12,6 +12,18 @@ export default function SubscribeForm() {
   const [sending, setSending] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
+  const submitted = useRef(false);
+
+  // Next keeps visited pages mounted (<Activity>). After a successful sign-up, reset when the
+  // page is hidden, so coming back shows a fresh form instead of the thank-you message.
+  useLayoutEffect(
+    () => () => {
+      if (!submitted.current) return;
+      submitted.current = false;
+      setDone(false);
+    },
+    [],
+  );
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -30,6 +42,7 @@ export default function SubscribeForm() {
       setError(t.error);
     } else {
       setDone(true);
+      submitted.current = true;
     }
   }
 

@@ -3,7 +3,7 @@
 import * as L from "leaflet";
 import { useEffect, useRef, useState } from "react";
 import { event } from "@/config/event";
-import { createMap, pumpkin } from "@/lib/map";
+import { createMap, icons } from "@/lib/map";
 
 // The columns of the public_map_points view.
 export type Point = {
@@ -15,10 +15,12 @@ export type Point = {
   entrance: string | null;
   floor: string | null;
   apartment: string | null;
-  access_type: keyof typeof event.map.accessTypes;
+  access_type: keyof typeof event.map.accessTypes | null; // null for activities
   door_color: string | null;
   door_sign: string | null;
   access_notes: string | null;
+  kind: keyof typeof event.register.kinds;
+  description: string | null; // the activity
 };
 
 const t = event.map;
@@ -38,8 +40,10 @@ function popup(homes: Point[]) {
   add(el, `${homes[0].street} ${homes[0].building_number}`, "font-bold");
   for (const h of homes) {
     const home = document.createElement("div");
+    if (h.description) add(home, h.description, "font-medium");
     const where = (["entrance", "floor", "apartment"] as const).filter((k) => h[k]).map((k) => `${t.labels[k]} ${h[k]}`);
-    add(home, [...where, t.accessTypes[h.access_type]].join(" · "));
+    if (h.access_type) where.push(t.accessTypes[h.access_type]);
+    if (where.length) add(home, where.join(" · "));
     const door = (["door_color", "door_sign"] as const).filter((k) => h[k]).map((k) => `${t.labels[k]}: ${h[k]}`);
     if (door.length) add(home, door.join(" · "));
     if (h.access_notes) add(home, h.access_notes);
@@ -48,8 +52,8 @@ function popup(homes: Point[]) {
   return el;
 }
 
-// One pumpkin per building, so homes in the same building don't hide each other.
-const building = (p: Point) => `${p.street} ${p.building_number}`.replace(/\s+/g, " ").trim();
+// One marker per building and kind, so homes in the same building don't hide each other.
+const building = (p: Point) => `${p.kind} ${p.street} ${p.building_number}`.replace(/\s+/g, " ").trim();
 
 export default function MapView({ points }: { points: Point[] }) {
   const container = useRef<HTMLDivElement>(null);
@@ -61,7 +65,9 @@ export default function MapView({ points }: { points: Point[] }) {
     const buildings: Record<string, Point[]> = {};
     for (const p of points) (buildings[building(p)] ??= []).push(p);
     for (const homes of Object.values(buildings)) {
-      L.marker([homes[0].lat, homes[0].lng], { icon: pumpkin }).bindPopup(popup(homes), { maxHeight: 300 }).addTo(m);
+      L.marker([homes[0].lat, homes[0].lng], { icon: icons[homes[0].kind] })
+        .bindPopup(popup(homes), { maxHeight: 300 })
+        .addTo(m);
     }
     if (points.length) m.fitBounds(L.latLngBounds(points.map((p) => L.latLng(p.lat, p.lng))), { padding: [40, 40], maxZoom: 17 });
 

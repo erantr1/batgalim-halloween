@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { event } from "@/config/event";
@@ -39,13 +38,10 @@ async function Homes() {
 export default function MapPage() {
   return (
     <main className="mx-auto flex w-full max-w-xl flex-col gap-4 px-4 py-8">
-      <h1 className="text-3xl font-bold text-orange-500">{t.title}</h1>
+      <h1 className="text-3xl">{t.title}</h1>
       <Suspense fallback={<p>{t.loading}</p>}>
         <Homes />
       </Suspense>
-      <Link href="/" className="text-orange-400 underline">
-        {event.backHome}
-      </Link>
     </main>
   );
 }

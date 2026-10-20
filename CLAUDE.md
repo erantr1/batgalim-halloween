@@ -41,10 +41,10 @@ Use generic names in the database and code (`location`, `access_notes`, `display
 
 1. **Never collect door/entry codes.** No field for them anywhere.
 2. **Two separate required checkboxes** on the host form: (a) acknowledging the guidelines, including decorating the door so it's recognizable; (b) consent to having the address and door description shown on the event map. Store both.
-3. **Registrations default to `status = 'pending'`.** Only organizers set `approved`, in the Supabase Table Editor.
+3. **Registrations go straight to the map: `status` defaults to `approved`** (no approval step, decided 20.10). The anon INSERT policy only allows `approved`. Organizers hide a registration by setting `status = 'rejected'` in the Supabase Table Editor, and scan the list before publishing the map.
 4. **RLS on every table.** The anon role may INSERT into `registrations` and `map_subscribers`, and SELECT from `settings` and `public_map_points`. Nothing else: no SELECT, UPDATE or DELETE on `registrations` or `map_subscribers`.
 5. **The map reads only from the `public_map_points` view**, which exposes map fields only and filters to `status = 'approved' AND map_consent`. Never names, contact details or anything organizer-only. The view intentionally runs with owner privileges (no `security_invoker`) so anon can read it without SELECT on the base table. Keep its column list minimal. Supabase's linter will flag it; that is expected for this one view.
-6. **`access_notes` is free text shown publicly.** Organizers read it before approving. The form's helper text says it will appear on the map.
+6. **`access_notes` and `description` are free text shown publicly.** With no approval step, organizers read them before publishing the map and hide anything wrong. The form's helper text says they will appear on the map.
 7. **Never use the service_role/secret key** in client code, in `NEXT_PUBLIC_*` vars, or anywhere in this app.
 8. **The map stays dark until organizers publish it.** A single-row `settings` table holds `map_published` (default false). The view returns rows only when it is true, and `/map` shows "the map will be published on 31.10" while it is false. Organizers flip it on the afternoon of 31.10. The gate lives in the database, not only in the page, because the anon key is public and anyone could query the view directly.
 9. **Add `noindex`** to the whole site.
@@ -58,17 +58,19 @@ Before calling the database work done, verify with the anon key that:
 ## Data model (starting point)
 
 `registrations`
-- `id` uuid, `created_at`, `status` (`pending` | `approved` | `rejected`, default `pending`)
+- `id` uuid, `created_at`, `status` (`pending` | `approved` | `rejected`, default `approved`)
+- `kind` (`home` | `activity`, default `home`): a home handing out treats, or an activity (a maze in the yard, potions in the garden)
+- `description`: what the activity is (required for activities)
 - `names`: host names (organizer-only)
 - `phone`: host phone, required (organizer-only), so organizers can verify before approving
 - `street`, `building_number`, `entrance`, `floor`, `apartment`
-- `access_type` (`stairs` | `elevator` | `both`)
+- `access_type` (`stairs` | `elevator` | `both`), required for homes only
 - `door_color`, `door_sign`, `access_notes`
 - `lat`, `lng`: from a pin the host drops on a small map in the form (more reliable than geocoding)
 - `osm_link`: generated OpenStreetMap link from `lat`/`lng`, so organizers can check the pin from the Table Editor
 - `guidelines_ack` boolean, `map_consent` boolean (both must be true)
 
-`public_map_points` (view): `id`, `lat`, `lng`, `street`, `building_number`, `entrance`, `floor`, `apartment`, `access_type`, `door_color`, `door_sign`, `access_notes`.
+`public_map_points` (view): `id`, `lat`, `lng`, `street`, `building_number`, `entrance`, `floor`, `apartment`, `access_type`, `door_color`, `door_sign`, `access_notes`, `kind`, `description`.
 
 `map_subscribers`
 - `id`, `created_at`, `name`, `contact` (phone or email), `consent_to_contact` boolean
@@ -81,8 +83,8 @@ Schema, RLS policies and the view go in SQL files under `supabase/migrations/`, 
 ## Pages
 
 - `/`: event info and guidelines, with links to register, view the map, or get the map sent.
-- `/register`: host form. Guidelines appear above the form; the two checkboxes sit at the end.
-- `/map`: map of approved homes, gated by `map_published`. Tapping a pin shows the address and door description.
+- `/register`: host form, for a home (treats) or an activity; the home page's two buttons choose which (`?kind=activity`), no toggle in the form. Guidelines appear above the form; the two checkboxes sit at the end.
+- `/map`: map of approved homes (🎃) and activities (👻), gated by `map_published`. Tapping a pin shows the address and door or activity description.
 - `/get-map`: Kiryat Eliezer sign-up.
 
 ## Leaflet gotchas
