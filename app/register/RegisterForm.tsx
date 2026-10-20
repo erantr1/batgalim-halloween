@@ -81,7 +81,7 @@ export default function RegisterForm() {
       <div className="flex flex-col gap-4 rounded-xl border border-orange-500 p-4">
         <p className="text-lg">{t.success}</p>
         <Link href="/" className="text-orange-400 underline">
-          {t.backHome}
+          {event.backHome}
         </Link>
       </div>
     );

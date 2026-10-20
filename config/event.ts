@@ -1,5 +1,6 @@
 // All event-specific content. Components read from here.
 
+const date = "31.10";
 const time = { start: "18:00", end: "20:00" };
 const timeLabel = `${time.start} עד ${time.end}`;
 const afterParty = "בבר גלים או בגינה הקהילתית (יעודכן)"; // open question
@@ -10,13 +11,27 @@ export const event = {
   name: "האלווין בבת גלים",
   tagline: "ממתק או ברדק",
   description: `ממתק או ברדק בשכונת בת גלים, חיפה. מוצאי שבת, 31.10, ${timeLabel}.`,
-  date: "31.10",
+  date,
   dateLong: "מוצאי שבת, 31.10.2026",
   time,
   timeLabel,
   afterParty,
+  backHome: "חזרה לדף הראשי",
 
-  map: { center: [32.832, 34.98] as [number, number], zoom: 16 },
+  map: {
+    center: [32.832, 34.98] as [number, number],
+    zoom: 16,
+    title: "מפת הבתים המשתתפים",
+    intro: "הקישו על דלעת כדי לראות איך מגיעים לדלת.",
+    empty: "עדיין אין בתים במפה.",
+    notPublished: `המפה תפורסם ב־${date}, לקראת תחילת האירוע.`,
+    loading: "טוען את המפה…",
+    error: "לא הצלחנו לטעון את המפה. נסו לרענן את הדף.",
+    locate: "הראו איפה אני (נקודה כחולה)",
+    locateError: "לא הצלחנו למצוא את המיקום שלכם. בדקו שהדפדפן מורשה לגשת למיקום.",
+    labels: { entrance: "כניסה", floor: "קומה", apartment: "דירה", door_color: "צבע הדלת", door_sign: "שלט" },
+    accessTypes: { stairs: "מדרגות", elevator: "מעלית", both: "מדרגות או מעלית" },
+  },
 
   home: {
     intro:
@@ -60,7 +75,6 @@ export const event = {
     pinMissing: "צריך לסמן את הבניין על המפה.",
     error: "משהו השתבש בשליחה. נסו שוב.",
     success: "תודה! קיבלנו את ההרשמה. אחרי אישור המארגנים הבית יופיע במפה.",
-    backHome: "חזרה לדף הראשי",
   },
 
   guidelinesTitle: "הנחיות",
