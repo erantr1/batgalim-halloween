@@ -101,7 +101,7 @@ Each step should build and deploy on its own.
 4. `/map`, gated by `map_published`.
 5. `/get-map` sign-up.
 
-Organizer export: use the Supabase Table Editor's CSV export. Don't build one.
+Organizer export: use the Supabase Table Editor's CSV export. Don't build one. Subscribers get the `/map` link by hand: organizers export `map_subscribers` and send it. No SMS or email service.
 
 ## Commands
 
@@ -115,7 +115,6 @@ Check every page at phone width before calling it done.
 
 - After-party location: Bar Galim or the community garden?
 - Link to the community file for allergen-free food (mentioned in the brief).
-- How subscribers get the map link: organizers send it manually, or automated?
 
 ## Original brief (Hebrew)
 

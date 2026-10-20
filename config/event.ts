@@ -77,6 +77,19 @@ export const event = {
     success: "תודה! קיבלנו את ההרשמה. אחרי אישור המארגנים הבית יופיע במפה.",
   },
 
+  // Organizers send the link by hand (CSV export of map_subscribers).
+  getMap: {
+    title: "קבלת מפת האירוע",
+    intro: "לא גרים בבת גלים? השאירו פרטים ונשלח לכם קישור למפת הבתים המשתתפים.",
+    labels: { name: "שם ההורה", contact: "טלפון או מייל" },
+    hints: { contact: "רק כדי לשלוח לכם את הקישור. הפרטים יימחקו אחרי האירוע." },
+    consent: "אני מסכים/ה שהמארגנים ישלחו לי את הקישור למפה.",
+    submit: "שליחה",
+    sending: "שולח…",
+    error: "משהו השתבש בשליחה. נסו שוב.",
+    success: "תודה! נשלח לכם את הקישור למפה לפני האירוע.",
+  },
+
   guidelinesTitle: "הנחיות",
   guidelines: [
     { text: `ממתק או ברדק בין ${time.start} ל־${time.end}. אחר כך נפגשים לאירוע קהילתי ${afterParty}.` },
