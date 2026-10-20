@@ -60,10 +60,12 @@ Before calling the database work done, verify with the anon key that:
 `registrations`
 - `id` uuid, `created_at`, `status` (`pending` | `approved` | `rejected`, default `pending`)
 - `names`: host names (organizer-only)
+- `phone`: host phone, required (organizer-only), so organizers can verify before approving
 - `street`, `building_number`, `entrance`, `floor`, `apartment`
 - `access_type` (`stairs` | `elevator` | `both`)
 - `door_color`, `door_sign`, `access_notes`
 - `lat`, `lng`: from a pin the host drops on a small map in the form (more reliable than geocoding)
+- `osm_link`: generated OpenStreetMap link from `lat`/`lng`, so organizers can check the pin from the Table Editor
 - `guidelines_ack` boolean, `map_consent` boolean (both must be true)
 
 `public_map_points` (view): `id`, `lat`, `lng`, `street`, `building_number`, `entrance`, `floor`, `apartment`, `access_type`, `door_color`, `door_sign`, `access_notes`.
@@ -74,7 +76,7 @@ Before calling the database work done, verify with the anon key that:
 
 `settings`: a single row with `map_published` boolean, default false.
 
-Schema, RLS policies and the view go in SQL files under `supabase/migrations/`, committed to the repo.
+Schema, RLS policies and the view go in SQL files under `supabase/migrations/`, committed to the repo. There is no Supabase CLI: organizers paste each file into the SQL Editor.
 
 ## Pages
 
@@ -112,7 +114,6 @@ Check every page at phone width before calling it done.
 ## Open questions (ask, don't guess)
 
 - After-party location: Bar Galim or the community garden?
-- Should hosts give a phone number so organizers can verify them before approving?
 - Link to the community file for allergen-free food (mentioned in the brief).
 - How subscribers get the map link: organizers send it manually, or automated?
 
