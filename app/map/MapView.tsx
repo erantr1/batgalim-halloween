@@ -21,6 +21,7 @@ export type Point = {
   access_notes: string | null;
   kind: keyof typeof event.register.kinds;
   description: string | null; // the activity
+  building_entry: string | null;
 };
 
 const t = event.map;
@@ -44,6 +45,7 @@ function popup(homes: Point[]) {
     const where = (["entrance", "floor", "apartment"] as const).filter((k) => h[k]).map((k) => `${t.labels[k]} ${h[k]}`);
     if (h.access_type) where.push(t.accessTypes[h.access_type]);
     if (where.length) add(home, where.join(" · "));
+    if (h.building_entry) add(home, `${t.labels.building_entry}: ${h.building_entry}`);
     const door = (["door_color", "door_sign"] as const).filter((k) => h[k]).map((k) => `${t.labels[k]}: ${h[k]}`);
     if (door.length) add(home, door.join(" · "));
     if (h.access_notes) add(home, h.access_notes);

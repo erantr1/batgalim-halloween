@@ -2,16 +2,15 @@
 
 # Bat Galim Halloween
 
-Web app for the Bat Galim (Haifa) neighborhood Halloween on **31.10.2026**. Trick-or-treat runs 18:00–20:00, followed by a community event (location TBD: Bar Galim or the community garden).
+Web app for the Bat Galim (Haifa) neighborhood Halloween on **31.10.2026**. Trick-or-treat runs 18:00–20:00, followed by a community event at Bar Galim.
 
 **Hard deadline: 25.10.2026.** Prefer the simplest thing that works. Don't add features, abstractions or dependencies that aren't listed here without asking.
 
 ## Who uses it
 
-- **Hosts**: neighbors who register their home as a trick-or-treat stop.
-- **Families**: open the map on the evening to find participating homes.
-- **Visitors from Kiryat Eliezer**: a parent leaves contact details to receive the map link, without opening the map.
-- **Organizers**: approve registrations in the Supabase dashboard. There is no admin UI.
+- **Hosts**: neighbors who register their home as a trick-or-treat stop, or an activity.
+- **Viewers** (families, neighbors, visitors from Kiryat Eliezer): register with a name and contact to open the map on the evening. Hosts get in with their host registration.
+- **Organizers**: hide registrations and viewers in the Supabase dashboard. There is no admin UI.
 
 Almost everyone is on a phone. Design mobile-first.
 
@@ -39,11 +38,11 @@ Use generic names in the database and code (`location`, `access_notes`, `display
 
 ## Privacy and security rules (non-negotiable)
 
-1. **Never collect door/entry codes.** No field for them anywhere.
+1. **Never collect door/entry codes.** No field for them anywhere. `building_entry` is for an intercom or a phone to call, and its hint says not to write the code (decided 23.10).
 2. **Two separate required checkboxes** on the host form: (a) acknowledging the guidelines, including decorating the door so it's recognizable; (b) consent to having the address and door description shown on the event map. Store both.
 3. **Registrations go straight to the map: `status` defaults to `approved`** (no approval step, decided 20.10). The anon INSERT policy only allows `approved`. Organizers hide a registration by setting `status = 'rejected'` in the Supabase Table Editor, and scan the list before publishing the map.
-4. **RLS on every table.** The anon role may INSERT into `registrations` and `map_subscribers`, and SELECT from `settings` and `public_map_points`. Nothing else: no SELECT, UPDATE or DELETE on `registrations` or `map_subscribers`.
-5. **The map reads only from the `public_map_points` view**, which exposes map fields only and filters to `status = 'approved' AND map_consent`. Never names, contact details or anything organizer-only. The view intentionally runs with owner privileges (no `security_invoker`) so anon can read it without SELECT on the base table. Keep its column list minimal. Supabase's linter will flag it; that is expected for this one view.
+4. **RLS on every table.** The anon role may INSERT into `registrations` and `map_subscribers`, SELECT from `settings`, and EXECUTE `map_points`. Nothing else: no SELECT, UPDATE or DELETE on `registrations` or `map_subscribers`, and no direct SELECT on `public_map_points`.
+5. **The map reads only through `map_points(viewer)`**, which returns the `public_map_points` view's rows only for a known `access_key` whose row isn't `rejected` (decided 23.10). Each host and viewer registration generates the key in the browser and keeps it in the `access_key` cookie; `/map` shows people without a valid key the viewer form instead of the map. Setting a row to `rejected` closes its map access. The view exposes map fields only and filters to `status = 'approved' AND map_consent`. Never names, contact details or anything organizer-only. The view and the function intentionally run with owner privileges (no `security_invoker`, `security definer`) so anon can use them without SELECT on the base tables. Keep the view's column list minimal. Supabase's linter will flag it; that is expected.
 6. **`access_notes` and `description` are free text shown publicly.** With no approval step, organizers read them before publishing the map and hide anything wrong. The form's helper text says they will appear on the map.
 7. **Never use the service_role/secret key** in client code, in `NEXT_PUBLIC_*` vars, or anywhere in this app.
 8. **The map stays dark until organizers publish it.** A single-row `settings` table holds `map_published` (default false). The view returns rows only when it is true, and `/map` shows "the map will be published on 31.10" while it is false. Organizers flip it on the afternoon of 31.10. The gate lives in the database, not only in the page, because the anon key is public and anyone could query the view directly.
@@ -52,8 +51,9 @@ Use generic names in the database and code (`location`, `access_notes`, `display
 
 Before calling the database work done, verify with the anon key that:
 - selecting from `registrations` and `map_subscribers` returns an empty list;
-- `public_map_points` returns nothing while `map_published` is false;
-- with it true, the view returns only approved, consented rows with the allowed columns.
+- selecting from `public_map_points` directly is denied;
+- `map_points` with an unknown or rejected key fails, and with a valid key returns nothing while `map_published` is false;
+- with it true, it returns only approved, consented rows with the allowed columns.
 
 ## Data model (starting point)
 
@@ -63,18 +63,20 @@ Before calling the database work done, verify with the anon key that:
 - `description`: what the activity is (required for activities)
 - `names`: host names (organizer-only)
 - `phone`: host phone, required (organizer-only), so organizers can verify before approving
-- `street`, `building_number`, `entrance`, `floor`, `apartment`
+- `street` (picked from a fixed list of Bat Galim streets in `config/event.ts`), `building_number`, `entrance`, `floor`, `apartment`
+- `building_entry`: intercom or a phone to call, never the code
 - `access_type` (`stairs` | `elevator` | `both`), required for homes only
 - `door_color`, `door_sign`, `access_notes`
 - `lat`, `lng`: from a pin the host drops on a small map in the form (more reliable than geocoding)
 - `osm_link`: generated OpenStreetMap link from `lat`/`lng`, so organizers can check the pin from the Table Editor
 - `guidelines_ack` boolean, `map_consent` boolean (both must be true)
+- `access_key` uuid: lets the host into the map
 
-`public_map_points` (view): `id`, `lat`, `lng`, `street`, `building_number`, `entrance`, `floor`, `apartment`, `access_type`, `door_color`, `door_sign`, `access_notes`, `kind`, `description`.
+`public_map_points` (view): `id`, `lat`, `lng`, `street`, `building_number`, `entrance`, `floor`, `apartment`, `access_type`, `door_color`, `door_sign`, `access_notes`, `kind`, `description`, `building_entry`.
 
 `map_subscribers`
-- `id`, `created_at`, `name`, `contact` (phone or email), `consent_to_contact` boolean
-- Filled in by a parent or guardian. Collect only what's needed to send the link.
+- `id`, `created_at`, `name`, `contact` (phone or email), `consent_to_contact` boolean, `status` (default `approved`), `access_key` uuid
+- Viewers: a minimal registration to open the map. Collect only what organizers need to know who it is.
 
 `settings`: a single row with `map_published` boolean, default false.
 
@@ -84,8 +86,7 @@ Schema, RLS policies and the view go in SQL files under `supabase/migrations/`, 
 
 - `/`: event info and guidelines, with links to register, view the map, or get the map sent.
 - `/register`: host form, for a home (treats) or an activity; the home page's two buttons choose which (`?kind=activity`), no toggle in the form. Guidelines appear above the form; the two checkboxes sit at the end.
-- `/map`: map of approved homes (🎃) and activities (👻), gated by `map_published`. Tapping a pin shows the address and door or activity description.
-- `/get-map`: Kiryat Eliezer sign-up.
+- `/map`: map of approved homes (🎃) and activities (🕷️), for registered viewers and hosts (everyone else sees the viewer registration form there), gated by `map_published`. Tapping a pin shows the address and door or activity description.
 
 ## Leaflet gotchas
 
@@ -103,7 +104,7 @@ Each step should build and deploy on its own.
 4. `/map`, gated by `map_published`.
 5. `/get-map` sign-up.
 
-Organizer export: use the Supabase Table Editor's CSV export. Don't build one. Subscribers get the `/map` link by hand: organizers export `map_subscribers` and send it. No SMS or email service.
+Organizer export: use the Supabase Table Editor's CSV export. Don't build one. No SMS or email service.
 
 ## Commands
 
@@ -115,7 +116,6 @@ Check every page at phone width before calling it done.
 
 ## Open questions (ask, don't guess)
 
-- After-party location: Bar Galim or the community garden?
 - Link to the community file for allergen-free food (mentioned in the brief).
 
 ## Original brief (Hebrew)

@@ -1,22 +1,28 @@
 import type { Metadata } from "next";
-import { connection } from "next/server";
+import { cookies } from "next/headers";
 import { Suspense } from "react";
 import { event } from "@/config/event";
+import { accessKeyCookie } from "@/lib/accessKey";
 import { supabase } from "@/lib/supabase";
 import MapClient from "./MapClient";
 import type { Point } from "./MapView";
+import SubscribeForm from "./SubscribeForm";
 
 const t = event.map;
 
 export const metadata: Metadata = { title: t.title };
 
 async function Homes() {
-  await connection(); // the published flag and the homes are read on every request, never at build
-  // The gate lives in the database: the view returns no rows until map_published is true.
+  // Read on every request, never at build. Only hosts and registered viewers get in; everyone else
+  // gets the viewer form right here. Not a redirect: Next keeps visited pages mounted and would replay it.
+  const key = (await cookies()).get(accessKeyCookie)?.value;
+  if (!key) return <SubscribeForm />;
+  // The gate lives in the database: map_points() checks the key, and returns no rows until map_published is true.
   const [settings, points] = await Promise.all([
     supabase.from("settings").select("map_published").single(),
-    supabase.from("public_map_points").select("*"),
+    supabase.rpc("map_points", { viewer: key }),
   ]);
+  if (points.error?.code === "28000") return <SubscribeForm />; // unknown key, or hidden by organizers
   if (settings.error || points.error) {
     console.error(settings.error ?? points.error);
     return (

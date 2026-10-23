@@ -19,6 +19,11 @@ export default function Guidelines({ items }: { items: Guideline[] }) {
           </li>
         ))}
       </ul>
+      <div className="flex flex-col gap-2 border-t border-orange-500/30 pt-3">
+        <h3 className="font-bold">{event.privacy.title}</h3>
+        <p>{event.privacy.text}</p>
+        <p className="whitespace-pre-line text-stone-300">{event.privacy.signature}</p>
+      </div>
     </section>
   );
 }

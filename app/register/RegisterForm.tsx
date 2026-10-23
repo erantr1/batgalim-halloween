@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useLayoutEffect, useRef, useState, type FormEvent, type InputHTMLAttributes } from "react";
 import { event } from "@/config/event";
+import { saveAccessKey } from "@/app/actions";
 import { supabase } from "@/lib/supabase";
 import type { Pin } from "./PinPicker";
 
@@ -66,12 +67,14 @@ export default function RegisterForm() {
 
     const f = new FormData(e.currentTarget);
     const text = (k: string) => String(f.get(k) ?? "").trim() || null;
+    const accessKey = crypto.randomUUID(); // also lets the host into the map
     setSending(true);
     setError("");
     // No .select(): anon may only INSERT, so asking for the row back would fail.
     // Fields hidden for this kind aren't in the form, so they are sent as null.
     const { error } = await supabase.from("registrations").insert({
       kind,
+      access_key: accessKey,
       description: text("description"),
       names: text("names"),
       phone: text("phone"),
@@ -80,6 +83,7 @@ export default function RegisterForm() {
       entrance: text("entrance"),
       floor: text("floor"),
       apartment: text("apartment"),
+      building_entry: text("building_entry"),
       access_type: text("access_type"),
       door_color: text("door_color"),
       door_sign: text("door_sign"),
@@ -94,6 +98,7 @@ export default function RegisterForm() {
       console.error(error);
       setError(t.error);
     } else {
+      await saveAccessKey(accessKey).catch(console.error);
       setDone(true);
       submitted.current = true;
     }
@@ -118,9 +123,18 @@ export default function RegisterForm() {
       <Field name="phone" required minLength={9} maxLength={20} type="tel" dir="ltr" autoComplete="tel" hint={t.hints.private} />
 
       <div className="grid grid-cols-3 gap-3">
-        <div className="col-span-2">
-          <Field name="street" required maxLength={100} />
-        </div>
+        {/* Only Bat Galim's streets, so every address on the map is spelled the same way. */}
+        <label className="col-span-2 flex flex-col gap-1">
+          <span>{t.labels.street}</span>
+          <select name="street" required defaultValue="" className={input}>
+            <option value="" disabled>
+              {t.chooseStreet}
+            </option>
+            {t.streets.map((s) => (
+              <option key={s}>{s}</option>
+            ))}
+          </select>
+        </label>
         <Field name="building_number" required maxLength={10} />
       </div>
 
@@ -139,6 +153,7 @@ export default function RegisterForm() {
             <Field name="floor" maxLength={10} />
             <Field name="apartment" maxLength={10} />
           </div>
+          <Field name="building_entry" maxLength={100} hint={t.hints.building_entry} />
 
           <fieldset className="flex flex-col gap-2">
             <legend className="mb-1">{t.labels.access_type}</legend>

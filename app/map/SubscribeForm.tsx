@@ -1,33 +1,23 @@
 "use client";
 
-import Link from "next/link";
-import { useLayoutEffect, useRef, useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
+import { useState, type FormEvent } from "react";
 import { event } from "@/config/event";
+import { saveAccessKey } from "@/app/actions";
 import { supabase } from "@/lib/supabase";
 
-const t = event.getMap;
+const t = event.subscribe;
 const input = "w-full rounded-lg border border-stone-600 bg-stone-800 px-3 py-2 text-base";
 
 export default function SubscribeForm() {
+  const router = useRouter();
   const [sending, setSending] = useState(false);
-  const [done, setDone] = useState(false);
   const [error, setError] = useState("");
-  const submitted = useRef(false);
-
-  // Next keeps visited pages mounted (<Activity>). After a successful sign-up, reset when the
-  // page is hidden, so coming back shows a fresh form instead of the thank-you message.
-  useLayoutEffect(
-    () => () => {
-      if (!submitted.current) return;
-      submitted.current = false;
-      setDone(false);
-    },
-    [],
-  );
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
+    const accessKey = crypto.randomUUID();
     setSending(true);
     setError("");
     // No .select(): anon may only INSERT, so asking for the row back would fail.
@@ -35,30 +25,22 @@ export default function SubscribeForm() {
       name: String(f.get("name")).trim(),
       contact: String(f.get("contact")).trim(),
       consent_to_contact: f.get("consent_to_contact") === "on",
+      access_key: accessKey,
     });
-    setSending(false);
     if (error) {
       console.error(error);
-      setError(t.error);
-    } else {
-      setDone(true);
-      submitted.current = true;
+      setSending(false);
+      return setError(t.error);
     }
-  }
-
-  if (done) {
-    return (
-      <div className="flex flex-col gap-4 rounded-xl border border-orange-500 p-4">
-        <p className="text-lg">{t.success}</p>
-        <Link href="/" className="text-orange-400 underline">
-          {event.backHome}
-        </Link>
-      </div>
-    );
+    await saveAccessKey(accessKey).catch(console.error);
+    setSending(false);
+    router.refresh(); // /map renders again, now with the key: the map instead of this form
   }
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-5">
+      <h2 className="text-2xl font-bold">{t.title}</h2>
+      <p className="text-lg">{t.intro}</p>
       <label className="flex flex-col gap-1">
         <span>{t.labels.name}</span>
         <input name="name" required maxLength={100} autoComplete="name" className={input} />
