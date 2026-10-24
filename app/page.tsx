@@ -8,12 +8,13 @@ const button = "flex min-h-12 w-full items-center justify-center gap-2 rounded-x
 
 type Cta = { href: string; label: string; icon: string; style: string };
 
-// Viewers go straight to the map; /map sends anyone not registered yet to the viewer form.
+// "Opens on 31.10" until published; then the map, or the viewer form for anyone not registered yet.
 const map: Cta = { href: "/map", label: t.cta.map, icon: "🎃🕷️", style: "border border-orange-500" };
 
 const register: Cta[] = [
   { href: "/register", label: t.cta.register, icon: "🍬", style: "bg-orange-500 text-stone-950 shadow-[0_0_20px_rgb(249_115_22/0.45)]" },
   { href: "/register?kind=activity", label: t.cta.activity, icon: "🕸️", style: "bg-purple-800 text-white" },
+  { href: "/get-map", label: t.cta.subscribe, icon: "👀", style: "bg-lime-600 text-stone-950" },
 ];
 
 function CtaLink({ href, label, icon, style }: Cta) {

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { event } from "@/config/event";
@@ -12,6 +13,7 @@ const input = "w-full rounded-lg border border-stone-600 bg-stone-800 px-3 py-2 
 export default function SubscribeForm() {
   const router = useRouter();
   const [sending, setSending] = useState(false);
+  const [done, setDone] = useState(false);
   const [error, setError] = useState("");
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
@@ -34,13 +36,23 @@ export default function SubscribeForm() {
     }
     await saveAccessKey(accessKey).catch(console.error);
     setSending(false);
-    router.refresh(); // /map renders again, now with the key: the map instead of this form
+    setDone(true);
+    router.refresh(); // on /map, renders the page again with the key: the map replaces this form
+  }
+
+  if (done) {
+    return (
+      <div className="flex flex-col gap-4 rounded-xl border border-orange-500 p-4">
+        <p className="text-lg">{t.success}</p>
+        <Link href="/map" className="text-orange-400 underline">
+          {t.toMap}
+        </Link>
+      </div>
+    );
   }
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-5">
-      <h2 className="text-2xl font-bold">{t.title}</h2>
-      <p className="text-lg">{t.intro}</p>
       <label className="flex flex-col gap-1">
         <span>{t.labels.name}</span>
         <input name="name" required maxLength={100} autoComplete="name" className={input} />

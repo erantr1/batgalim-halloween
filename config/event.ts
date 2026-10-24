@@ -1,7 +1,7 @@
 // All event-specific content. Components read from here.
 
 const date = "31.10";
-const time = { start: "18:00", end: "20:00" };
+const time = { start: "17:00", end: "19:00" };
 const timeLabel = `${time.start} עד ${time.end}`;
 
 export type Guideline = { text: string; link?: { label: string; href: string } };
@@ -40,7 +40,8 @@ export const event = {
     cta: {
       register: "אני רוצה לחלק ממתקים! כאן נרשמים",
       activity: "אני מביא אותה בפעילות של הישמור! כאן נרשמים",
-      map: "שכנה מעוניינת- הרשמה לצפייה במפה",
+      map: "כאן צופים במפה!",
+      subscribe: "שכנה מעוניינת- הרשמה לצפייה במפה",
     },
   },
 
@@ -132,16 +133,19 @@ export const event = {
     ] satisfies Guideline[],
   },
 
-  // Viewer registration, shown on /map until people register (hosts get in with their host registration).
+  // Viewer registration: on /get-map, and on /map once published for anyone not registered yet.
+  // Hosts get in with their host registration.
   subscribe: {
     title: "הרשמה לצפייה במפה",
     intro: "לא בא לכם לחלק ממתקים? השאירו פרטים וצפו במפת הבתים והפעילויות.",
     labels: { name: "שם", contact: "טלפון או מייל" },
     hints: { contact: "לא יופיע במפה. רק המארגנים יראו, והפרטים יימחקו אחרי האירוע." },
     consent: "אני מסכים/ה שהמארגנים ישמרו את הפרטים עד אחרי האירוע ויוכלו ליצור איתי קשר.",
-    submit: "הרשמה וכניסה למפה",
+    submit: "הרשמה",
     sending: "שולח…",
     error: "משהו השתבש בשליחה. נסו שוב.",
+    success: `נרשמתם! המפה תיפתח ב־${date}, לקראת תחילת האירוע.`,
+    toMap: "למפה",
   },
 
   guidelinesTitle: "הנחיות",

@@ -2,7 +2,7 @@
 
 # Bat Galim Halloween
 
-Web app for the Bat Galim (Haifa) neighborhood Halloween on **31.10.2026**. Trick-or-treat runs 18:00–20:00, followed by a community event at Bar Galim.
+Web app for the Bat Galim (Haifa) neighborhood Halloween on **31.10.2026**. Trick-or-treat runs 17:00–19:00 (changed from 18:00–20:00 on 24.10), followed by a community event at Bar Galim.
 
 **Hard deadline: 25.10.2026.** Prefer the simplest thing that works. Don't add features, abstractions or dependencies that aren't listed here without asking.
 
@@ -42,7 +42,7 @@ Use generic names in the database and code (`location`, `access_notes`, `display
 2. **Two separate required checkboxes** on the host form: (a) acknowledging the guidelines, including decorating the door so it's recognizable; (b) consent to having the address and door description shown on the event map. Store both.
 3. **Registrations go straight to the map: `status` defaults to `approved`** (no approval step, decided 20.10). The anon INSERT policy only allows `approved`. Organizers hide a registration by setting `status = 'rejected'` in the Supabase Table Editor, and scan the list before publishing the map.
 4. **RLS on every table.** The anon role may INSERT into `registrations` and `map_subscribers`, SELECT from `settings`, and EXECUTE `map_points`. Nothing else: no SELECT, UPDATE or DELETE on `registrations` or `map_subscribers`, and no direct SELECT on `public_map_points`.
-5. **The map reads only through `map_points(viewer)`**, which returns the `public_map_points` view's rows only for a known `access_key` whose row isn't `rejected` (decided 23.10). Each host and viewer registration generates the key in the browser and keeps it in the `access_key` cookie; `/map` shows people without a valid key the viewer form instead of the map. Setting a row to `rejected` closes its map access. The view exposes map fields only and filters to `status = 'approved' AND map_consent`. Never names, contact details or anything organizer-only. The view and the function intentionally run with owner privileges (no `security_invoker`, `security definer`) so anon can use them without SELECT on the base tables. Keep the view's column list minimal. Supabase's linter will flag it; that is expected.
+5. **The map reads only through `map_points(viewer)`**, which returns the `public_map_points` view's rows only for a known `access_key` whose row isn't `rejected` (decided 23.10). Each host and viewer registration generates the key in the browser and keeps it in the `access_key` cookie; once the map is published, `/map` shows people without a valid key the viewer form instead of the map. Setting a row to `rejected` closes its map access. The view exposes map fields only and filters to `status = 'approved' AND map_consent`. Never names, contact details or anything organizer-only. The view and the function intentionally run with owner privileges (no `security_invoker`, `security definer`) so anon can use them without SELECT on the base tables. Keep the view's column list minimal. Supabase's linter will flag it; that is expected.
 6. **`access_notes` and `description` are free text shown publicly.** With no approval step, organizers read them before publishing the map and hide anything wrong. The form's helper text says they will appear on the map.
 7. **Never use the service_role/secret key** in client code, in `NEXT_PUBLIC_*` vars, or anywhere in this app.
 8. **The map stays dark until organizers publish it.** A single-row `settings` table holds `map_published` (default false). The view returns rows only when it is true, and `/map` shows "the map will be published on 31.10" while it is false. Organizers flip it on the afternoon of 31.10. The gate lives in the database, not only in the page, because the anon key is public and anyone could query the view directly.
@@ -86,7 +86,8 @@ Schema, RLS policies and the view go in SQL files under `supabase/migrations/`, 
 
 - `/`: event info and guidelines, with links to register, view the map, or get the map sent.
 - `/register`: host form, for a home (treats) or an activity; the home page's two buttons choose which (`?kind=activity`), no toggle in the form. Guidelines appear above the form; the two checkboxes sit at the end.
-- `/map`: map of approved homes (🎃) and activities (🕷️), for registered viewers and hosts (everyone else sees the viewer registration form there), gated by `map_published`. Tapping a pin shows the address and door or activity description.
+- `/get-map`: viewer registration, the home page's third registration button.
+- `/map`: the home page's top button. "Opens on 31.10" for everyone until `map_published`; then the map of approved homes (🎃) and activities (🕷️) for registered viewers and hosts, and the viewer form for everyone else. Tapping a pin shows the address and door or activity description.
 
 ## Leaflet gotchas
 

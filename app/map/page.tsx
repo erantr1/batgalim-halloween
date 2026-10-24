@@ -6,37 +6,49 @@ import { accessKeyCookie } from "@/lib/accessKey";
 import { supabase } from "@/lib/supabase";
 import MapClient from "./MapClient";
 import type { Point } from "./MapView";
-import SubscribeForm from "./SubscribeForm";
+import SubscribeForm from "@/components/SubscribeForm";
 
 const t = event.map;
 
 export const metadata: Metadata = { title: t.title };
 
 async function Homes() {
-  // Read on every request, never at build. Only hosts and registered viewers get in; everyone else
-  // gets the viewer form right here. Not a redirect: Next keeps visited pages mounted and would replay it.
+  // Read on every request, never at build.
   const key = (await cookies()).get(accessKeyCookie)?.value;
-  if (!key) return <SubscribeForm />;
   // The gate lives in the database: map_points() checks the key, and returns no rows until map_published is true.
   const [settings, points] = await Promise.all([
     supabase.from("settings").select("map_published").single(),
-    supabase.rpc("map_points", { viewer: key }),
+    key ? supabase.rpc("map_points", { viewer: key }) : null,
   ]);
-  if (points.error?.code === "28000") return <SubscribeForm />; // unknown key, or hidden by organizers
-  if (settings.error || points.error) {
-    console.error(settings.error ?? points.error);
+  // 28000: unknown key, or hidden by organizers; handled below
+  if (settings.error || (points?.error && points.error.code !== "28000")) {
+    console.error(settings.error ?? points?.error);
     return (
       <p role="alert" className="text-red-400">
         {t.error}
       </p>
     );
   }
+  // Everyone sees this until organizers publish the map.
   if (!settings.data.map_published) return <p className="text-lg">{t.notPublished}</p>;
+  // Then only hosts and registered viewers; everyone else registers right here (no key, an unknown
+  // one, or hidden by organizers). Not a redirect: Next keeps visited pages mounted and would replay it.
+  if (!points || points.error) return <Join />;
 
   return (
     <>
       <p>{points.data.length ? t.intro : t.empty}</p>
       <MapClient points={points.data as Point[]} />
+    </>
+  );
+}
+
+function Join() {
+  return (
+    <>
+      <h2 className="text-2xl font-bold">{event.subscribe.title}</h2>
+      <p className="text-lg">{event.subscribe.intro}</p>
+      <SubscribeForm />
     </>
   );
 }
