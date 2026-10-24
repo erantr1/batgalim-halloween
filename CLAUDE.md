@@ -41,18 +41,19 @@ Use generic names in the database and code (`location`, `access_notes`, `display
 1. **Never collect door/entry codes.** No field for them anywhere. `building_entry` is for an intercom or a phone to call, and its hint says not to write the code (decided 23.10).
 2. **Two separate required checkboxes** on the host form: (a) acknowledging the guidelines, including decorating the door so it's recognizable; (b) consent to having the address and door description shown on the event map. Store both.
 3. **Registrations go straight to the map: `status` defaults to `approved`** (no approval step, decided 20.10). The anon INSERT policy only allows `approved`. Organizers hide a registration by setting `status = 'rejected'` in the Supabase Table Editor, and scan the list before publishing the map.
-4. **RLS on every table.** The anon role may INSERT into `registrations` and `map_subscribers`, SELECT from `settings`, and EXECUTE `map_points`. Nothing else: no SELECT, UPDATE or DELETE on `registrations` or `map_subscribers`, and no direct SELECT on `public_map_points`.
-5. **The map reads only through `map_points(viewer)`**, which returns the `public_map_points` view's rows only for a known `access_key` whose row isn't `rejected` (decided 23.10). Each host and viewer registration generates the key in the browser and keeps it in the `access_key` cookie; once the map is published, `/map` shows people without a valid key the viewer form instead of the map. Setting a row to `rejected` closes its map access. The view exposes map fields only and filters to `status = 'approved' AND map_consent`. Never names, contact details or anything organizer-only. The view and the function intentionally run with owner privileges (no `security_invoker`, `security definer`) so anon can use them without SELECT on the base tables. Keep the view's column list minimal. Supabase's linter will flag it; that is expected.
+4. **RLS on every table.** The anon role may INSERT into `registrations` and `map_subscribers` (never with `organizer = true`), SELECT from `settings`, and EXECUTE `map_points`. Nothing else: no SELECT, UPDATE or DELETE on `registrations` or `map_subscribers`, and no direct SELECT on `public_map_points`.
+5. **The map reads only through `map_points(viewer)`**, which returns the `public_map_points` view's rows only for a known `access_key` whose row isn't `rejected` (decided 23.10). Each host and viewer registration generates the key in the browser and keeps it in the `access_key` cookie; once the map is published, `/map` shows people without a valid key the viewer form instead of the map. Viewer rows with `organizer = true` (set by hand in the Table Editor) see the map before it's published, with a preview banner (decided 24.10). Setting a row to `rejected` closes its map access. The view exposes map fields only and filters to `status = 'approved' AND map_consent`. Never names, contact details or anything organizer-only. The view and the function intentionally run with owner privileges (no `security_invoker`, `security definer`) so anon can use them without SELECT on the base tables. Keep the view's column list minimal. Supabase's linter will flag it; that is expected.
 6. **`access_notes` and `description` are free text shown publicly.** With no approval step, organizers read them before publishing the map and hide anything wrong. The form's helper text says they will appear on the map.
 7. **Never use the service_role/secret key** in client code, in `NEXT_PUBLIC_*` vars, or anywhere in this app.
-8. **The map stays dark until organizers publish it.** A single-row `settings` table holds `map_published` (default false). The view returns rows only when it is true, and `/map` shows "the map will be published on 31.10" while it is false. Organizers flip it on the afternoon of 31.10. The gate lives in the database, not only in the page, because the anon key is public and anyone could query the view directly.
+8. **The map stays dark until organizers publish it.** A single-row `settings` table holds `map_published` (default false). `map_points` returns rows only when it is true (except for organizer keys), and `/map` shows "the map will be published on 31.10" while it is false. Organizers flip it on the afternoon of 31.10. The gate lives in the database, not only in the page, because the anon key is public and anyone could query the view directly.
 9. **Add `noindex`** to the whole site.
 10. **After the event (1.11):** set `map_published` to false and delete all rows from `registrations` and `map_subscribers`.
 
 Before calling the database work done, verify with the anon key that:
 - selecting from `registrations` and `map_subscribers` returns an empty list;
 - selecting from `public_map_points` directly is denied;
-- `map_points` with an unknown or rejected key fails, and with a valid key returns nothing while `map_published` is false;
+- `map_points` with an unknown or rejected key fails, and with a valid non-organizer key fails while `map_published` is false;
+- with an organizer key it returns rows even while `map_published` is false, and anon can't insert `organizer = true`;
 - with it true, it returns only approved, consented rows with the allowed columns.
 
 ## Data model (starting point)
@@ -75,7 +76,7 @@ Before calling the database work done, verify with the anon key that:
 `public_map_points` (view): `id`, `lat`, `lng`, `street`, `building_number`, `entrance`, `floor`, `apartment`, `access_type`, `door_color`, `door_sign`, `access_notes`, `kind`, `description`, `building_entry`.
 
 `map_subscribers`
-- `id`, `created_at`, `name`, `contact` (phone or email), `consent_to_contact` boolean, `status` (default `approved`), `access_key` uuid
+- `id`, `created_at`, `name`, `contact` (phone or email), `consent_to_contact` boolean, `status` (default `approved`), `access_key` uuid, `organizer` boolean (default false; set by hand, lets that viewer see the map before it's published)
 - Viewers: a minimal registration to open the map. Collect only what organizers need to know who it is.
 
 `settings`: a single row with `map_published` boolean, default false.

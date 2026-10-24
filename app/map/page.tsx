@@ -15,13 +15,14 @@ export const metadata: Metadata = { title: t.title };
 async function Homes() {
   // Read on every request, never at build.
   const key = (await cookies()).get(accessKeyCookie)?.value;
-  // The gate lives in the database: map_points() checks the key, and returns no rows until map_published is true.
+  // The gate lives in the database: map_points() checks the key and map_published (organizer keys skip that).
   const [settings, points] = await Promise.all([
     supabase.from("settings").select("map_published").single(),
     key ? supabase.rpc("map_points", { viewer: key }) : null,
   ]);
-  // 28000: unknown key, or hidden by organizers; handled below
-  if (settings.error || (points?.error && points.error.code !== "28000")) {
+  // 28000: unknown key, or hidden by organizers. PT403: not published yet. Both handled below.
+  const gated = points?.error && ["28000", "PT403"].includes(points.error.code);
+  if (settings.error || (points?.error && !gated)) {
     console.error(settings.error ?? points?.error);
     return (
       <p role="alert" className="text-red-400">
@@ -29,18 +30,25 @@ async function Homes() {
       </p>
     );
   }
-  // Everyone sees this until organizers publish the map.
+  // Hosts and registered viewers once published; organizers before that too.
+  if (points && !points.error) {
+    return (
+      <>
+        {!settings.data.map_published && (
+          <p role="status" className="rounded-lg border border-lime-500 p-3">
+            {t.preview}
+          </p>
+        )}
+        <p>{points.data.length ? t.intro : t.empty}</p>
+        <MapClient points={points.data as Point[]} />
+      </>
+    );
+  }
+  // Everyone else sees this until organizers publish the map.
   if (!settings.data.map_published) return <p className="text-lg">{t.notPublished}</p>;
-  // Then only hosts and registered viewers; everyone else registers right here (no key, an unknown
-  // one, or hidden by organizers). Not a redirect: Next keeps visited pages mounted and would replay it.
-  if (!points || points.error) return <Join />;
-
-  return (
-    <>
-      <p>{points.data.length ? t.intro : t.empty}</p>
-      <MapClient points={points.data as Point[]} />
-    </>
-  );
+  // Then they register right here (no key, an unknown one, or hidden by organizers).
+  // Not a redirect: Next keeps visited pages mounted and would replay it.
+  return <Join />;
 }
 
 function Join() {
