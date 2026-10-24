@@ -2,7 +2,7 @@
 
 # Bat Galim Halloween
 
-Web app for the Bat Galim (Haifa) neighborhood Halloween on **31.10.2026**. Trick-or-treat runs 17:00–19:00 (changed from 18:00–20:00 on 24.10), followed by a community event at Bar Galim.
+Web app for the Bat Galim (Haifa) neighborhood Halloween on **31.10.2026**. Trick-or-treat runs 17:00–19:00 (changed from 18:00–20:00 on 24.10). The after-party was cancelled (decided 24.10).
 
 **Hard deadline: 25.10.2026.** Prefer the simplest thing that works. Don't add features, abstractions or dependencies that aren't listed here without asking.
 
@@ -32,7 +32,7 @@ Env vars: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`. Keep `.en
 
 ## Config, not hardcoding
 
-All event-specific content lives in one file, `config/event.ts`: Hebrew copy and guidelines, date, time window, after-party location, map center and zoom, external links. Components read from it. Nothing about Bat Galim is hardcoded inside components.
+All event-specific content lives in one file, `config/event.ts`: Hebrew copy and guidelines, date, time window, map center and zoom, external links. Components read from it. Nothing about Bat Galim is hardcoded inside components.
 
 Use generic names in the database and code (`location`, `access_notes`, `display_label`, `status`) rather than Halloween-specific ones. The code may later be reused for other projects (e.g. volunteer food delivery). That is the only reuse prep: no multi-tenancy, translation framework, form builder or admin UI.
 
