@@ -119,7 +119,7 @@ export default function RegisterForm() {
     <form onSubmit={onSubmit} className="flex flex-col gap-5">
       <h2 className="text-2xl font-bold">{t.kinds[kind]}</h2>
 
-      <Field name="names" required maxLength={200} autoComplete="name" hint={t.hints.private} />
+      <Field name="names" required maxLength={200} autoComplete="name" />
       <Field name="phone" required minLength={9} maxLength={20} type="tel" dir="ltr" autoComplete="tel" hint={t.hints.private} />
 
       <div className="grid grid-cols-3 gap-3">

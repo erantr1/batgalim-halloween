@@ -22,6 +22,7 @@ export type Point = {
   kind: keyof typeof event.register.kinds;
   description: string | null; // the activity
   building_entry: string | null;
+  names: string;
 };
 
 const t = event.map;
@@ -32,6 +33,7 @@ function details(h: Point) {
   if (h.access_type) where.push(t.accessTypes[h.access_type]);
   const door = (["door_color", "door_sign"] as const).filter((k) => h[k]).map((k) => `${t.labels[k]}: ${h[k]}`);
   return [
+    h.names && `${t.labels.names}: ${h.names}`,
     where.join(" · "),
     h.building_entry && `${t.labels.building_entry}: ${h.building_entry}`,
     door.join(" · "),
