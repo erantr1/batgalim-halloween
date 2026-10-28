@@ -52,6 +52,21 @@ body {
   color: var(--foreground);
 }
 
+/* Printed maps, for kids without a phone: black on white paper, no night sky. */
+@media print {
+  body {
+    background: none;
+    color: black;
+  }
+  /* the glow prints as a smudge */
+  h1 {
+    filter: none !important;
+  }
+  .leaflet-control-zoom {
+    display: none;
+  }
+}
+
 @layer base {
   h1 {
     font-family: var(--font-spooky);

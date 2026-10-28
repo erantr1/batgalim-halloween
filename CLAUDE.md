@@ -66,7 +66,7 @@ Before calling the database work done, verify with the anon key that:
 - `phone`: host phone, required (organizer-only), so organizers can verify before approving
 - `street` (picked from a fixed list of Bat Galim streets in `config/event.ts`), `building_number`, `entrance`, `floor`, `apartment`
 - `building_entry`: intercom or a phone to call, never the code
-- `access_type` (`stairs` | `elevator` | `both`), required for homes only
+- `access_type` (`ground` | `stairs` | `elevator` | `both`), required for homes only
 - `door_color`, `door_sign`, `access_notes`
 - `lat`, `lng`: from a pin the host drops on a small map in the form (more reliable than geocoding)
 - `osm_link`: generated OpenStreetMap link from `lat`/`lng`, so organizers can check the pin from the Table Editor
@@ -88,7 +88,7 @@ Schema, RLS policies and the view go in SQL files under `supabase/migrations/`, 
 - `/`: event info and guidelines, with links to register, view the map, or get the map sent.
 - `/register`: host form, for a home (treats) or an activity; the home page's two buttons choose which (`?kind=activity`), no toggle in the form. Guidelines appear above the form; the two checkboxes sit at the end.
 - `/get-map`: viewer registration, the home page's third registration button.
-- `/map`: the home page's top button. "Opens on 31.10" for everyone until `map_published`; then the map of approved homes (🎃) and activities (🕷️) for registered viewers and hosts, and the viewer form for everyone else. Tapping a pin shows the address and door or activity description.
+- `/map`: the home page's top button. "Opens on 31.10" for everyone until `map_published`; then the map of approved homes (🎃) and activities (🕷️) for registered viewers and hosts, and the viewer form for everyone else. Tapping a pin shows the address and door or activity description. Pins are numbered, and a numbered list of all the places sits under the map; the print button prints the map on the first page and the list after it, for kids without a phone (decided 28.10).
 
 ## Leaflet gotchas
 

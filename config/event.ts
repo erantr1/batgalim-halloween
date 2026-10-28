@@ -28,7 +28,9 @@ export const event = {
     locate: "הראו איפה אני (נקודה כחולה)",
     locateError: "לא הצלחנו למצוא את המיקום שלכם. בדקו שהדפדפן מורשה לגשת למיקום.",
     labels: { entrance: "כניסה", floor: "קומה", apartment: "דירה", door_color: "צבע הדלת", door_sign: "שלט", building_entry: "כניסה לבניין" },
-    accessTypes: { stairs: "מדרגות", elevator: "מעלית", both: "מדרגות או מעלית" },
+    accessTypes: { ground: "קומת קרקע", stairs: "מדרגות", elevator: "מעלית", both: "מדרגות או מעלית" },
+    print: "הדפסת המפה והרשימה",
+    listTitle: "כל המקומות",
   },
 
   home: {
@@ -103,7 +105,7 @@ export const event = {
       "שקמונה",
       "שרל לוץ",
     ],
-    accessTypes: { stairs: "מדרגות", elevator: "מעלית", both: "גם וגם" },
+    accessTypes: { ground: "קומת קרקע", stairs: "מדרגות", elevator: "מעלית", both: "גם וגם" },
     hints: {
       private: "לא יופיע במפה. רק המארגנים יראו.",
       description: "יופיע במפה לכל המשתתפים. למשל: מבוך קרטונים בחצר.",

@@ -2,7 +2,7 @@
 // never in the way of taps, and still when the visitor asks for reduced motion.
 export default function Decorations() {
   return (
-    <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden select-none">
+    <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden select-none print:hidden">
       <div className="absolute -end-8 -top-8 size-24 rounded-full bg-amber-100 shadow-[0_0_60px_20px_rgb(254_243_199/0.3)]" />
       <span className="absolute end-20 top-3 animate-float text-2xl motion-reduce:animate-none">🦇</span>
       <span className="absolute end-32 top-8 animate-float text-lg [animation-delay:-3s] motion-reduce:animate-none">🦇</span>

@@ -35,7 +35,7 @@ async function Homes() {
     return (
       <>
         {!settings.data.map_published && (
-          <p role="status" className="rounded-lg border border-lime-500 p-3">
+          <p role="status" className="rounded-lg border border-lime-500 p-3 print:hidden">
             {t.preview}
           </p>
         )}

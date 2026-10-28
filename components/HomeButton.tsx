@@ -11,7 +11,7 @@ export default function HomeButton() {
     <Link
       href="/"
       aria-label={event.backHome}
-      className="absolute start-3 top-2 flex size-11 animate-flicker items-center justify-center rounded-full border border-orange-500/60 bg-linear-to-br from-purple-900 to-stone-950 text-2xl shadow-[0_0_14px_rgb(249_115_22/0.6)] motion-reduce:animate-none"
+      className="absolute start-3 top-2 flex print:hidden size-11 animate-flicker items-center justify-center rounded-full border border-orange-500/60 bg-linear-to-br from-purple-900 to-stone-950 text-2xl shadow-[0_0_14px_rgb(249_115_22/0.6)] motion-reduce:animate-none"
     >
       🏚️
       {/* a big spider dropping over the house */}
